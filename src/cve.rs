@@ -197,7 +197,7 @@ pub async fn cve_match(
                 for j in 0..nodes.len() {
                     if match_node(&cpe23_vec, &nodes[j]) {
                         println!(
-                            "marched cve :{}",
+                            "matched cve :{}",
                             &cve_items[i]["cve"]["CVE_data_meta"]["ID"]
                         );
                     }
