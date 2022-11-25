@@ -218,6 +218,150 @@ pub fn read_nvdcve() -> serde_json::Value {
     serde_json::from_reader(file).unwrap()
 }
 
+#[derive(Debug)]
+struct NvdCve {
+    cve_data_type: String,
+    cve_data_format: String,
+    cve_data_version: String,
+    cve_data_number_of_cves: String,
+    cve_data_timestamp: String,
+    cve_items: Vec<CveItem>,
+}
+
+#[derive(Debug)]
+struct CveItem {
+    cve: Cve,
+    configurations: Configurations,
+    impact: Impact,
+    published_date: String,
+    last_modified_date: String,
+}
+
+#[derive(Debug)]
+struct Cve {
+    data_type: String,
+    data_format: String,
+    data_version: String,
+    cve_data_meta: CveDataMeta,
+    problem_type: ProblemType,
+    references: References,
+    description: Description,
+}
+
+#[derive(Debug)]
+struct CveDataMeta {
+    id: String,
+    assigner: String,
+}
+
+#[derive(Debug)]
+struct ProblemType {
+    problem_type_data: Vec<DescriptionData>,
+}
+
+#[derive(Debug)]
+struct DescriptionData {
+    lang: String,
+    value: String,
+}
+
+#[derive(Debug)]
+struct References {
+    reference_data: Vec<ReferenceData>,
+}
+
+#[derive(Debug)]
+struct ReferenceData {
+    url: String,
+    name: String,
+    refsource: String,
+    tags: Vec<String>,
+}
+
+#[derive(Debug)]
+struct Description {
+    description_data: Vec<DescriptionData>,
+}
+
+#[derive(Debug)]
+struct Configurations {
+    cve_data_version: String,
+    nodes: Vec<Node>,
+}
+
+#[derive(Debug)]
+struct Node {
+    operator: String,
+    children: Vec<Box<Node>>,
+    cpe_match: Vec<CpeMatch>,
+}
+
+#[derive(Debug)]
+struct CpeMatch {
+    vulnerable: bool,
+    cpe23_uri: String,
+    cpe_name: Vec<String>,
+}
+
+#[derive(Debug)]
+struct Impact {
+    base_metric_v3: BaseMetricV3,
+    base_metric_v2: BaseMetricV2,
+}
+
+#[derive(Debug)]
+struct BaseMetricV3 {
+    cvss_v3: CvssV3,
+    exploitability_score: f64,
+    impact_score: f64,
+}
+
+#[derive(Debug)]
+struct CvssV3 {
+    version: String,
+    vector_string: String,
+    attack_vector: String,
+    attack_complexity: String,
+    privileges_required: String,
+    user_interaction: String,
+    scope: String,
+    confidentiality_impact: String,
+    integrity_impact: String,
+    availability_impact: String,
+    base_score: f64,
+    base_severity: String,
+}
+
+#[derive(Debug)]
+struct BaseMetricV2 {
+    cvss_v2: CvssV2,
+    severity: String,
+    exploitability_score: f64,
+    impact_score: f64,
+    ac_insuf_info: bool,
+    obtain_all_privilege: bool,
+    obtain_user_privilege: bool,
+    obtain_other_privilege: bool,
+    user_interaction_required: bool,
+}
+
+#[derive(Debug)]
+struct CvssV2 {
+    version: String,
+    vector_string: String,
+    attack_vector: String,
+    attack_complexity: String,
+    confidentiality_impact: String,
+    integrity_impact: String,
+    availability_impact: String,
+    base_score: f64,
+}
+
+impl NvdCve {
+    // pub fn new() -> NvdCve {
+    //     NvdCve{};
+    // }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
