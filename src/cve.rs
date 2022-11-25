@@ -262,23 +262,22 @@ impl CveItem {
         let mut cve_items = Vec::new();
         for cve_item in json.iter() {
             let cve = &cve_item["cve"];
-            let configurations = cve_item["configurations"].as_array().unwrap();
+            let cve = Cve::new(cve);
+            let configurations = &cve_item["configurations"];
+            let configurations = Configurations::new(configurations);
             let impact = &cve_item["impact"];
-            let published_date = cve_item["publishedDate"].as_str();
-            let last_modified_date = cve_item["lastModifiedDate"].as_str();
-            // let a = CveItem{};
-
-            
+            let impact = Impact::new(impact);
+            let published_date = cve_item["publishedDate"].as_str().unwrap().to_owned();
+            let last_modified_date = cve_item["lastModifiedDate"].as_str().unwrap().to_owned();
             let cve_item = CveItem {
-                cve: todo!(),
-                configurations: todo!(),
-                impact: todo!(),
-                published_date: todo!(),
-                last_modified_date: todo!(),
+                cve,
+                configurations,
+                impact,
+                published_date,
+                last_modified_date,
             };
             cve_items.push(cve_item);
         }
-
         cve_items
     }
 }
@@ -294,8 +293,9 @@ struct Cve {
 }
 
 impl Cve {
-    pub fn new(json: &serde_json::Value) -> Cve {
-        Cve {
+    pub fn new(json: &serde_json::Value) -> Vec<Cve> {
+
+        let cve = Cve {
             data_type: todo!(),
             data_format: todo!(),
             data_version: todo!(),
@@ -303,7 +303,8 @@ impl Cve {
             problem_type: todo!(),
             references: todo!(),
             description: todo!(),
-        }
+        };
+        Vec::new()
     }
 }
 
