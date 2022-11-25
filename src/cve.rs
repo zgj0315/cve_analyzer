@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-const CVE_DICT: &str = "./data/nvdcve-1.1-2022.json.zip";
+static CVE_DICT: &str = "./data/nvdcve-1.1-2022.json.zip";
 
 pub async fn download_cve() -> Result<(), Box<dyn std::error::Error>> {
     let path = Path::new("./data");
@@ -218,6 +218,345 @@ pub fn read_nvdcve() -> serde_json::Value {
     serde_json::from_reader(file).unwrap()
 }
 
+#[derive(Debug)]
+struct NvdCve {
+    cve_data_type: String,
+    cve_data_format: String,
+    cve_data_version: String,
+    cve_data_number_of_cves: String,
+    cve_data_timestamp: String,
+    cve_items: Vec<CveItem>,
+}
+
+impl NvdCve {
+    pub fn new(json: &serde_json::Value) -> NvdCve {
+        let cve_data_type = json["CVE_data_type"].as_str().unwrap().to_owned();
+        let cve_data_format = json["CVE_data_format"].as_str().unwrap().to_owned();
+        let cve_data_version = json["CVE_data_version"].as_str().unwrap().to_owned();
+        let cve_data_number_of_cves = json["CVE_data_numberOfCVEs"].as_str().unwrap().to_owned();
+        let cve_data_timestamp = json["CVE_data_timestamp"].as_str().unwrap().to_owned();
+        let cve_items = &json["CVE_Items"];
+        let cve_items = CveItem::new(&cve_items);
+        NvdCve {
+            cve_data_type,
+            cve_data_format,
+            cve_data_version,
+            cve_data_number_of_cves,
+            cve_data_timestamp,
+            cve_items,
+        }
+    }
+}
+#[derive(Debug)]
+struct CveItem {
+    cve: Vec<Cve>,
+    configurations: Configurations,
+    impact: Impact,
+    published_date: String,
+    last_modified_date: String,
+}
+
+impl CveItem {
+    pub fn new(json: &serde_json::Value) -> Vec<CveItem> {
+        let json = json.as_array().unwrap();
+        let mut cve_items = Vec::new();
+        for cve_item in json.iter() {
+            let cve = &cve_item["cve"];
+            let cve = Cve::new(cve);
+            let configurations = &cve_item["configurations"];
+            let configurations = Configurations::new(configurations);
+            let impact = &cve_item["impact"];
+            let impact = Impact::new(impact);
+            let published_date = cve_item["publishedDate"].as_str().unwrap().to_owned();
+            let last_modified_date = cve_item["lastModifiedDate"].as_str().unwrap().to_owned();
+            let cve_item = CveItem {
+                cve,
+                configurations,
+                impact,
+                published_date,
+                last_modified_date,
+            };
+            cve_items.push(cve_item);
+        }
+        cve_items
+    }
+}
+#[derive(Debug)]
+struct Cve {
+    data_type: String,
+    data_format: String,
+    data_version: String,
+    cve_data_meta: CveDataMeta,
+    problem_type: ProblemType,
+    references: References,
+    description: Description,
+}
+
+impl Cve {
+    pub fn new(json: &serde_json::Value) -> Vec<Cve> {
+
+        let cve = Cve {
+            data_type: todo!(),
+            data_format: todo!(),
+            data_version: todo!(),
+            cve_data_meta: todo!(),
+            problem_type: todo!(),
+            references: todo!(),
+            description: todo!(),
+        };
+        Vec::new()
+    }
+}
+
+#[derive(Debug)]
+struct CveDataMeta {
+    id: String,
+    assigner: String,
+}
+
+impl CveDataMeta {
+    pub fn new(json: &serde_json::Value) -> CveDataMeta {
+        CveDataMeta {
+            id: todo!(),
+            assigner: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct ProblemType {
+    problem_type_data: Vec<DescriptionData>,
+}
+
+impl ProblemType {
+    pub fn new(json: &serde_json::Value) -> ProblemType {
+        ProblemType {
+            problem_type_data: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct DescriptionData {
+    lang: String,
+    value: String,
+}
+
+impl DescriptionData {
+    pub fn new(json: &serde_json::Value) -> DescriptionData {
+        DescriptionData {
+            lang: todo!(),
+            value: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct References {
+    reference_data: Vec<ReferenceData>,
+}
+
+impl References {
+    pub fn new(json: &serde_json::Value) -> References {
+        References {
+            reference_data: todo!(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ReferenceData {
+    url: String,
+    name: String,
+    refsource: String,
+    tags: Vec<String>,
+}
+
+impl ReferenceData {
+    pub fn new(json: &serde_json::Value) -> ReferenceData {
+        ReferenceData {
+            url: todo!(),
+            name: todo!(),
+            refsource: todo!(),
+            tags: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct Description {
+    description_data: Vec<DescriptionData>,
+}
+
+impl Description {
+    pub fn new(json: &serde_json::Value) -> Description {
+        Description {
+            description_data: todo!(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Configurations {
+    cve_data_version: String,
+    nodes: Vec<Node>,
+}
+
+impl Configurations {
+    pub fn new(json: &serde_json::Value) -> Configurations {
+        Configurations {
+            cve_data_version: todo!(),
+            nodes: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct Node {
+    operator: String,
+    children: Vec<Box<Node>>,
+    cpe_match: Vec<CpeMatch>,
+}
+
+impl Node {
+    pub fn new(json: &serde_json::Value) -> Node {
+        Node {
+            operator: todo!(),
+            children: todo!(),
+            cpe_match: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct CpeMatch {
+    vulnerable: bool,
+    cpe23_uri: String,
+    cpe_name: Vec<String>,
+}
+
+impl CpeMatch {
+    pub fn new(json: &serde_json::Value) -> CpeMatch {
+        CpeMatch {
+            vulnerable: todo!(),
+            cpe23_uri: todo!(),
+            cpe_name: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct Impact {
+    base_metric_v3: BaseMetricV3,
+    base_metric_v2: BaseMetricV2,
+}
+
+impl Impact {
+    pub fn new(json: &serde_json::Value) -> Impact {
+        Impact {
+            base_metric_v3: todo!(),
+            base_metric_v2: todo!(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct BaseMetricV3 {
+    cvss_v3: CvssV3,
+    exploitability_score: f64,
+    impact_score: f64,
+}
+impl BaseMetricV3 {
+    pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
+        BaseMetricV3 {
+            cvss_v3: todo!(),
+            exploitability_score: todo!(),
+            impact_score: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct CvssV3 {
+    version: String,
+    vector_string: String,
+    attack_vector: String,
+    attack_complexity: String,
+    privileges_required: String,
+    user_interaction: String,
+    scope: String,
+    confidentiality_impact: String,
+    integrity_impact: String,
+    availability_impact: String,
+    base_score: f64,
+    base_severity: String,
+}
+
+impl CvssV3 {
+    pub fn new(json: &serde_json::Value) -> CvssV3 {
+        CvssV3 {
+            version: todo!(),
+            vector_string: todo!(),
+            attack_vector: todo!(),
+            attack_complexity: todo!(),
+            privileges_required: todo!(),
+            user_interaction: todo!(),
+            scope: todo!(),
+            confidentiality_impact: todo!(),
+            integrity_impact: todo!(),
+            availability_impact: todo!(),
+            base_score: todo!(),
+            base_severity: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct BaseMetricV2 {
+    cvss_v2: CvssV2,
+    severity: String,
+    exploitability_score: f64,
+    impact_score: f64,
+    ac_insuf_info: bool,
+    obtain_all_privilege: bool,
+    obtain_user_privilege: bool,
+    obtain_other_privilege: bool,
+    user_interaction_required: bool,
+}
+
+impl BaseMetricV2 {
+    pub fn new(json: &serde_json::Value) -> BaseMetricV2 {
+        BaseMetricV2 {
+            cvss_v2: todo!(),
+            severity: todo!(),
+            exploitability_score: todo!(),
+            impact_score: todo!(),
+            ac_insuf_info: todo!(),
+            obtain_all_privilege: todo!(),
+            obtain_user_privilege: todo!(),
+            obtain_other_privilege: todo!(),
+            user_interaction_required: todo!(),
+        }
+    }
+}
+#[derive(Debug)]
+struct CvssV2 {
+    version: String,
+    vector_string: String,
+    attack_vector: String,
+    attack_complexity: String,
+    confidentiality_impact: String,
+    integrity_impact: String,
+    availability_impact: String,
+    base_score: f64,
+}
+
+impl CvssV2 {
+    pub fn new(json: &serde_json::Value) -> CvssV2 {
+        CvssV2 {
+            version: todo!(),
+            vector_string: todo!(),
+            attack_vector: todo!(),
+            attack_complexity: todo!(),
+            confidentiality_impact: todo!(),
+            integrity_impact: todo!(),
+            availability_impact: todo!(),
+            base_score: todo!(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -282,5 +621,13 @@ mod tests {
         cpe23_vec.push(&cpe23);
         let future = cve_match(&cpe23_vec, &json);
         let _ = tokio::join!(future);
+    }
+
+    #[test]
+    fn test_nvd_cve() {
+        let json = read_nvdcve();
+        let nvd_cve = NvdCve::new(&json);
+
+        print!("nvd_cve: {:?}", nvd_cve);
     }
 }
