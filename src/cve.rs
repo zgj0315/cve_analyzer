@@ -358,10 +358,24 @@ struct CvssV2 {
 }
 
 impl NvdCve {
-    // pub fn new() -> NvdCve {
-    //     NvdCve{};
-    // }
+    pub fn new(json: &serde_json::Value) -> NvdCve {
+        let cve_data_type = json["CVE_data_type"].as_str().unwrap();
+        let cve_data_format = json["CVE_data_format"].as_str().unwrap();
+        let cve_data_version = json["CVE_data_version"].as_str().unwrap();
+        let cve_data_number_of_cves = json["CVE_data_numberOfCVEs"].as_str().unwrap();
+        let cve_data_timestamp = json["CVE_data_timestamp"].as_str().unwrap();
+        let cve_items = json["CVE_Items"].as_array().unwrap();
+        NvdCve {
+            cve_data_type: cve_data_type.to_owned(),
+            cve_data_format: cve_data_format.to_owned(),
+            cve_data_version: cve_data_version.to_owned(),
+            cve_data_number_of_cves: cve_data_number_of_cves.to_owned(),
+            cve_data_timestamp: cve_data_timestamp.to_owned(),
+            cve_items: Vec::new(),
+        }
+    }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -426,5 +440,13 @@ mod tests {
         cpe23_vec.push(&cpe23);
         let future = cve_match(&cpe23_vec, &json);
         let _ = tokio::join!(future);
+    }
+
+    #[test]
+    fn test_nvd_cve() {
+        let json = read_nvdcve();
+        let nvd_cve = NvdCve::new(&json);
+
+        print!("nvd_cve: {:?}", nvd_cve);
     }
 }
