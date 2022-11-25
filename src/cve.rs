@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-const CVE_DICT: &str = "./data/nvdcve-1.1-2022.json.zip";
+static CVE_DICT: &str = "./data/nvdcve-1.1-2022.json.zip";
 
 pub async fn download_cve() -> Result<(), Box<dyn std::error::Error>> {
     let path = Path::new("./data");
