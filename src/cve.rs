@@ -249,7 +249,7 @@ impl NvdCve {
 }
 #[derive(Debug)]
 struct CveItem {
-    cve: Vec<Cve>,
+    cve: Cve,
     configurations: Configurations,
     impact: Impact,
     published_date: String,
@@ -293,18 +293,27 @@ struct Cve {
 }
 
 impl Cve {
-    pub fn new(json: &serde_json::Value) -> Vec<Cve> {
-
-        let cve = Cve {
-            data_type: todo!(),
-            data_format: todo!(),
-            data_version: todo!(),
-            cve_data_meta: todo!(),
-            problem_type: todo!(),
-            references: todo!(),
-            description: todo!(),
-        };
-        Vec::new()
+    pub fn new(json: &serde_json::Value) -> Cve {
+        let data_type = json["data_type"].as_str().unwrap().to_owned();
+        let data_format = json["data_format"].as_str().unwrap().to_owned();
+        let data_version = json["data_version"].as_str().unwrap().to_owned();
+        let cve_data_meta = &json["CVE_data_meta"];
+        let cve_data_meta = CveDataMeta::new(cve_data_meta);
+        let problem_type = &json["problemtype"];
+        let problem_type = ProblemType::new(problem_type);
+        let references = &json["references"];
+        let references = References::new(references);
+        let description = &json["description"];
+        let description = Description::new(description);
+        Cve {
+            data_type,
+            data_format,
+            data_version,
+            cve_data_meta,
+            problem_type,
+            references,
+            description,
+        }
     }
 }
 
@@ -316,10 +325,9 @@ struct CveDataMeta {
 
 impl CveDataMeta {
     pub fn new(json: &serde_json::Value) -> CveDataMeta {
-        CveDataMeta {
-            id: todo!(),
-            assigner: todo!(),
-        }
+        let id = json["ID"].as_str().unwrap().to_owned();
+        let assigner = json["ASSIGNER"].as_str().unwrap().to_owned();
+        CveDataMeta { id, assigner }
     }
 }
 #[derive(Debug)]
@@ -329,9 +337,13 @@ struct ProblemType {
 
 impl ProblemType {
     pub fn new(json: &serde_json::Value) -> ProblemType {
-        ProblemType {
-            problem_type_data: todo!(),
+        let json = json["problemtype_data"].as_array().unwrap();
+        let mut problem_type_data = Vec::new();
+        for description in json {
+            let description = DescriptionData::new(description);
+            problem_type_data.push(description);
         }
+        ProblemType { problem_type_data }
     }
 }
 #[derive(Debug)]
@@ -342,10 +354,9 @@ struct DescriptionData {
 
 impl DescriptionData {
     pub fn new(json: &serde_json::Value) -> DescriptionData {
-        DescriptionData {
-            lang: todo!(),
-            value: todo!(),
-        }
+        let lang = json["lang"].as_str().unwrap().to_owned();
+        let value = json["value"].as_str().unwrap().to_owned();
+        DescriptionData { lang, value }
     }
 }
 #[derive(Debug)]
@@ -355,9 +366,12 @@ struct References {
 
 impl References {
     pub fn new(json: &serde_json::Value) -> References {
-        References {
-            reference_data: todo!(),
+        let json = json["reference_data"].as_array().unwrap();
+        let mut reference_data = Vec::new();
+        for reference in json {
+            reference_data.push(ReferenceData::new(reference));
         }
+        References { reference_data }
     }
 }
 
@@ -371,11 +385,19 @@ struct ReferenceData {
 
 impl ReferenceData {
     pub fn new(json: &serde_json::Value) -> ReferenceData {
+        let url = json["url"].as_str().unwrap().to_owned();
+        let name = json["name"].as_str().unwrap().to_owned();
+        let refsource = json["refsource"].as_str().unwrap().to_owned();
+        let json = json["tags"].as_array().unwrap();
+        let mut tags = Vec::new();
+        for tag in json {
+            tags.push(tag.as_str().unwrap().to_owned());
+        }
         ReferenceData {
-            url: todo!(),
-            name: todo!(),
-            refsource: todo!(),
-            tags: todo!(),
+            url,
+            name,
+            refsource,
+            tags,
         }
     }
 }
@@ -386,9 +408,12 @@ struct Description {
 
 impl Description {
     pub fn new(json: &serde_json::Value) -> Description {
-        Description {
-            description_data: todo!(),
+        let json = json["description_data"].as_array().unwrap();
+        let mut description_data = Vec::new();
+        for description in json {
+            description_data.push(DescriptionData::new(description));
         }
+        Description { description_data }
     }
 }
 
@@ -446,9 +471,13 @@ struct Impact {
 
 impl Impact {
     pub fn new(json: &serde_json::Value) -> Impact {
+        let base_metric_v3 = &json["baseMetricV3"];
+        let base_metric_v3 = BaseMetricV3::new(base_metric_v3);
+        let base_metric_v2 = &json["baseMetricV2"];
+        let base_metric_v2 = BaseMetricV2::new(base_metric_v2);
         Impact {
-            base_metric_v3: todo!(),
-            base_metric_v2: todo!(),
+            base_metric_v3,
+            base_metric_v2,
         }
     }
 }
@@ -461,10 +490,14 @@ struct BaseMetricV3 {
 }
 impl BaseMetricV3 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
+        let cvss_v3 = &json["cvssV3"];
+        let cvss_v3 = CvssV3::new(cvss_v3);
+        let exploitability_score = json["exploitabilityScore"].as_f64().unwrap().to_owned();
+        let impact_score = json["impactScore"].as_f64().unwrap().to_owned();
         BaseMetricV3 {
-            cvss_v3: todo!(),
-            exploitability_score: todo!(),
-            impact_score: todo!(),
+            cvss_v3,
+            exploitability_score,
+            impact_score,
         }
     }
 }
@@ -486,19 +519,31 @@ struct CvssV3 {
 
 impl CvssV3 {
     pub fn new(json: &serde_json::Value) -> CvssV3 {
+        let version = json["version"].as_str().unwrap().to_owned();
+        let vector_string = json["vectorString"].as_str().unwrap().to_owned();
+        let attack_vector = json["attackVector"].as_str().unwrap().to_owned();
+        let attack_complexity = json["attackComplexity"].as_str().unwrap().to_owned();
+        let privileges_required = json["privilegesRequired"].as_str().unwrap().to_owned();
+        let user_interaction = json["userInteraction"].as_str().unwrap().to_owned();
+        let scope = json["scope"].as_str().unwrap().to_owned();
+        let confidentiality_impact = json["confidentialityImpact"].as_str().unwrap().to_owned();
+        let integrity_impact = json["integrityImpact"].as_str().unwrap().to_owned();
+        let availability_impact = json["availabilityImpact"].as_str().unwrap().to_owned();
+        let base_score = json["baseScore"].as_f64().unwrap().to_owned();
+        let base_severity = json["baseSeverity"].as_str().unwrap().to_owned();
         CvssV3 {
-            version: todo!(),
-            vector_string: todo!(),
-            attack_vector: todo!(),
-            attack_complexity: todo!(),
-            privileges_required: todo!(),
-            user_interaction: todo!(),
-            scope: todo!(),
-            confidentiality_impact: todo!(),
-            integrity_impact: todo!(),
-            availability_impact: todo!(),
-            base_score: todo!(),
-            base_severity: todo!(),
+            version,
+            vector_string,
+            attack_vector,
+            attack_complexity,
+            privileges_required,
+            user_interaction,
+            scope,
+            confidentiality_impact,
+            integrity_impact,
+            availability_impact,
+            base_score,
+            base_severity,
         }
     }
 }
