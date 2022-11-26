@@ -562,16 +562,29 @@ struct BaseMetricV2 {
 
 impl BaseMetricV2 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV2 {
+        let cvss_v2 = &json["cvssV2"];
+        let cvss_v2 = CvssV2::new(cvss_v2);
+        let severity = json["severity"].as_str().unwrap().to_owned();
+        let exploitability_score = json["exploitabilityScore"].as_f64().unwrap().to_owned();
+        let impact_score = json["impactScore"].as_f64().unwrap().to_owned();
+        let ac_insuf_info = json["acInsufInfo"].as_bool().unwrap().to_owned();
+        let obtain_all_privilege = json["obtainAllPrivilege"].as_bool().unwrap().to_owned();
+        let obtain_user_privilege = json["obtainUserPrivilege"].as_bool().unwrap().to_owned();
+        let obtain_other_privilege = json["obtainOtherPrivilege"].as_bool().unwrap().to_owned();
+        let user_interaction_required = json["userInteractionRequired"]
+            .as_bool()
+            .unwrap()
+            .to_owned();
         BaseMetricV2 {
-            cvss_v2: todo!(),
-            severity: todo!(),
-            exploitability_score: todo!(),
-            impact_score: todo!(),
-            ac_insuf_info: todo!(),
-            obtain_all_privilege: todo!(),
-            obtain_user_privilege: todo!(),
-            obtain_other_privilege: todo!(),
-            user_interaction_required: todo!(),
+            cvss_v2,
+            severity,
+            exploitability_score,
+            impact_score,
+            ac_insuf_info,
+            obtain_all_privilege,
+            obtain_user_privilege,
+            obtain_other_privilege,
+            user_interaction_required,
         }
     }
 }
@@ -589,15 +602,23 @@ struct CvssV2 {
 
 impl CvssV2 {
     pub fn new(json: &serde_json::Value) -> CvssV2 {
+        let version = json["version"].as_str().unwrap().to_owned();
+        let vector_string = json["vectorString"].as_str().unwrap().to_owned();
+        let attack_vector = json["attackVector"].as_str().unwrap().to_owned();
+        let attack_complexity = json["attackComplexity"].as_str().unwrap().to_owned();
+        let confidentiality_impact = json["confidentialityImpact"].as_str().unwrap().to_owned();
+        let integrity_impact = json["integrityImpact"].as_str().unwrap().to_owned();
+        let availability_impact = json["availabilityImpact"].as_str().unwrap().to_owned();
+        let base_score = json["baseScore"].as_f64().unwrap().to_owned();
         CvssV2 {
-            version: todo!(),
-            vector_string: todo!(),
-            attack_vector: todo!(),
-            attack_complexity: todo!(),
-            confidentiality_impact: todo!(),
-            integrity_impact: todo!(),
-            availability_impact: todo!(),
-            base_score: todo!(),
+            version,
+            vector_string,
+            attack_vector,
+            attack_complexity,
+            confidentiality_impact,
+            integrity_impact,
+            availability_impact,
+            base_score,
         }
     }
 }
