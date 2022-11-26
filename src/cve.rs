@@ -420,14 +420,17 @@ impl Description {
 #[derive(Debug)]
 struct Configurations {
     cve_data_version: String,
-    nodes: Vec<Node>,
+    nodes: Vec<Box<Node>>,
 }
 
 impl Configurations {
     pub fn new(json: &serde_json::Value) -> Configurations {
+        let cve_data_version = json["CVE_data_version"].as_str().unwrap().to_owned();
+        let nodes = &json["nodes"];
+        let nodes = Node::new(nodes);
         Configurations {
-            cve_data_version: todo!(),
-            nodes: todo!(),
+            cve_data_version,
+            nodes,
         }
     }
 }
@@ -439,28 +442,62 @@ struct Node {
 }
 
 impl Node {
-    pub fn new(json: &serde_json::Value) -> Node {
-        Node {
-            operator: todo!(),
-            children: todo!(),
-            cpe_match: todo!(),
+    pub fn new(json: &serde_json::Value) -> Vec<Box<Node>> {
+        let json = json.as_array().unwrap();
+        let mut node_vec = Vec::new();
+        for node in json {
+            let operator = node["operator"].as_str().unwrap().to_owned();
+            let children = &node["children"];
+            let children = Node::new(children);
+            let cpe_match = &node["cpe_match"];
+            let cpe_match = CpeMatch::new(cpe_match);
+            node_vec.push(Box::new(Node {
+                operator,
+                children,
+                cpe_match,
+            }));
         }
+        node_vec
     }
 }
 #[derive(Debug)]
 struct CpeMatch {
     vulnerable: bool,
     cpe23_uri: String,
+    version_start_excluding: String,
+    version_end_excluding: String,
     cpe_name: Vec<String>,
 }
 
 impl CpeMatch {
-    pub fn new(json: &serde_json::Value) -> CpeMatch {
-        CpeMatch {
-            vulnerable: todo!(),
-            cpe23_uri: todo!(),
-            cpe_name: todo!(),
+    pub fn new(json: &serde_json::Value) -> Vec<CpeMatch> {
+        let json = json.as_array().unwrap();
+        let mut cpe_match_vec = Vec::new();
+        for cpe_match in json {
+            let vulnerable = cpe_match["vulnerable"].as_bool().unwrap();
+            let cpe23_uri = cpe_match["cpe23Uri"].as_str().unwrap().to_owned();
+            let version_start_excluding = cpe_match["versionStartExcluding"]
+                .as_str()
+                .unwrap()
+                .to_owned();
+            let version_end_excluding = cpe_match["versionEndExcluding"]
+                .as_str()
+                .unwrap()
+                .to_owned();
+            let cpe_name_list = cpe_match["cpe_name"].as_array().unwrap();
+            let mut cpe_name = Vec::new();
+            for name in cpe_name_list {
+                cpe_name.push(name.as_str().unwrap().to_owned());
+            }
+            cpe_match_vec.push(CpeMatch {
+                vulnerable,
+                cpe23_uri,
+                version_start_excluding,
+                version_end_excluding,
+                cpe_name,
+            });
         }
+        cpe_match_vec
     }
 }
 #[derive(Debug)]
