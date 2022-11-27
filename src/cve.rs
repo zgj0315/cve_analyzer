@@ -332,16 +332,21 @@ impl CveDataMeta {
 }
 #[derive(Debug)]
 struct ProblemType {
-    problem_type_data: Vec<DescriptionData>,
+    problem_type_data: Vec<Vec<DescriptionData>>,
 }
 
 impl ProblemType {
     pub fn new(json: &serde_json::Value) -> ProblemType {
         let json = json["problemtype_data"].as_array().unwrap();
         let mut problem_type_data = Vec::new();
-        for description in json {
-            let description = DescriptionData::new(description);
-            problem_type_data.push(description);
+        for description_list in json {
+            let description_list = description_list["description"].as_array().unwrap();
+            let mut description_vec = Vec::new();
+            for description in description_list {
+                let description = DescriptionData::new(description);
+                description_vec.push(description);
+            }
+            problem_type_data.push(description_vec);
         }
         ProblemType { problem_type_data }
     }
@@ -464,8 +469,8 @@ impl Node {
 struct CpeMatch {
     vulnerable: bool,
     cpe23_uri: String,
-    version_start_excluding: String,
-    version_end_excluding: String,
+    version_start_excluding: Option<String>,
+    version_end_excluding: Option<String>,
     cpe_name: Vec<String>,
 }
 
@@ -478,12 +483,12 @@ impl CpeMatch {
             let cpe23_uri = cpe_match["cpe23Uri"].as_str().unwrap().to_owned();
             let version_start_excluding = cpe_match["versionStartExcluding"]
                 .as_str()
-                .unwrap()
-                .to_owned();
+                .to_owned()
+                .map(|s| s.to_string());
             let version_end_excluding = cpe_match["versionEndExcluding"]
                 .as_str()
-                .unwrap()
-                .to_owned();
+                .to_owned()
+                .map(|s| s.to_string());
             let cpe_name_list = cpe_match["cpe_name"].as_array().unwrap();
             let mut cpe_name = Vec::new();
             for name in cpe_name_list {
@@ -522,15 +527,15 @@ impl Impact {
 #[derive(Debug)]
 struct BaseMetricV3 {
     cvss_v3: CvssV3,
-    exploitability_score: f64,
-    impact_score: f64,
+    exploitability_score: Option<f64>,
+    impact_score: Option<f64>,
 }
 impl BaseMetricV3 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
         let cvss_v3 = &json["cvssV3"];
         let cvss_v3 = CvssV3::new(cvss_v3);
-        let exploitability_score = json["exploitabilityScore"].as_f64().unwrap().to_owned();
-        let impact_score = json["impactScore"].as_f64().unwrap().to_owned();
+        let exploitability_score = json["exploitabilityScore"].as_f64().to_owned();
+        let impact_score = json["impactScore"].as_f64().to_owned();
         BaseMetricV3 {
             cvss_v3,
             exploitability_score,
@@ -540,34 +545,61 @@ impl BaseMetricV3 {
 }
 #[derive(Debug)]
 struct CvssV3 {
-    version: String,
-    vector_string: String,
-    attack_vector: String,
-    attack_complexity: String,
-    privileges_required: String,
-    user_interaction: String,
-    scope: String,
-    confidentiality_impact: String,
-    integrity_impact: String,
-    availability_impact: String,
-    base_score: f64,
-    base_severity: String,
+    version: Option<String>,
+    vector_string: Option<String>,
+    attack_vector: Option<String>,
+    attack_complexity: Option<String>,
+    privileges_required: Option<String>,
+    user_interaction: Option<String>,
+    scope: Option<String>,
+    confidentiality_impact: Option<String>,
+    integrity_impact: Option<String>,
+    availability_impact: Option<String>,
+    base_score: Option<f64>,
+    base_severity: Option<String>,
 }
 
 impl CvssV3 {
     pub fn new(json: &serde_json::Value) -> CvssV3 {
-        let version = json["version"].as_str().unwrap().to_owned();
-        let vector_string = json["vectorString"].as_str().unwrap().to_owned();
-        let attack_vector = json["attackVector"].as_str().unwrap().to_owned();
-        let attack_complexity = json["attackComplexity"].as_str().unwrap().to_owned();
-        let privileges_required = json["privilegesRequired"].as_str().unwrap().to_owned();
-        let user_interaction = json["userInteraction"].as_str().unwrap().to_owned();
-        let scope = json["scope"].as_str().unwrap().to_owned();
-        let confidentiality_impact = json["confidentialityImpact"].as_str().unwrap().to_owned();
-        let integrity_impact = json["integrityImpact"].as_str().unwrap().to_owned();
-        let availability_impact = json["availabilityImpact"].as_str().unwrap().to_owned();
-        let base_score = json["baseScore"].as_f64().unwrap().to_owned();
-        let base_severity = json["baseSeverity"].as_str().unwrap().to_owned();
+        let version = json["version"].as_str().to_owned().map(|s| s.to_string());
+        let vector_string = json["vectorString"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let attack_vector = json["attackVector"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let attack_complexity = json["attackComplexity"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let privileges_required = json["privilegesRequired"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let user_interaction = json["userInteraction"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let scope = json["scope"].as_str().to_owned().map(|s| s.to_string());
+        let confidentiality_impact = json["confidentialityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let integrity_impact = json["integrityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let availability_impact = json["availabilityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let base_score = json["baseScore"].as_f64().to_owned();
+        let base_severity = json["baseSeverity"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
         CvssV3 {
             version,
             vector_string,
@@ -587,31 +619,28 @@ impl CvssV3 {
 #[derive(Debug)]
 struct BaseMetricV2 {
     cvss_v2: CvssV2,
-    severity: String,
-    exploitability_score: f64,
-    impact_score: f64,
-    ac_insuf_info: bool,
-    obtain_all_privilege: bool,
-    obtain_user_privilege: bool,
-    obtain_other_privilege: bool,
-    user_interaction_required: bool,
+    severity: Option<String>,
+    exploitability_score: Option<f64>,
+    impact_score: Option<f64>,
+    ac_insuf_info: Option<bool>,
+    obtain_all_privilege: Option<bool>,
+    obtain_user_privilege: Option<bool>,
+    obtain_other_privilege: Option<bool>,
+    user_interaction_required: Option<bool>,
 }
 
 impl BaseMetricV2 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV2 {
         let cvss_v2 = &json["cvssV2"];
         let cvss_v2 = CvssV2::new(cvss_v2);
-        let severity = json["severity"].as_str().unwrap().to_owned();
-        let exploitability_score = json["exploitabilityScore"].as_f64().unwrap().to_owned();
-        let impact_score = json["impactScore"].as_f64().unwrap().to_owned();
-        let ac_insuf_info = json["acInsufInfo"].as_bool().unwrap().to_owned();
-        let obtain_all_privilege = json["obtainAllPrivilege"].as_bool().unwrap().to_owned();
-        let obtain_user_privilege = json["obtainUserPrivilege"].as_bool().unwrap().to_owned();
-        let obtain_other_privilege = json["obtainOtherPrivilege"].as_bool().unwrap().to_owned();
-        let user_interaction_required = json["userInteractionRequired"]
-            .as_bool()
-            .unwrap()
-            .to_owned();
+        let severity = json["severity"].as_str().to_owned().map(|s| s.to_string());
+        let exploitability_score = json["exploitabilityScore"].as_f64().to_owned();
+        let impact_score = json["impactScore"].as_f64().to_owned();
+        let ac_insuf_info = json["acInsufInfo"].as_bool().to_owned();
+        let obtain_all_privilege = json["obtainAllPrivilege"].as_bool().to_owned();
+        let obtain_user_privilege = json["obtainUserPrivilege"].as_bool().to_owned();
+        let obtain_other_privilege = json["obtainOtherPrivilege"].as_bool().to_owned();
+        let user_interaction_required = json["userInteractionRequired"].as_bool().to_owned();
         BaseMetricV2 {
             cvss_v2,
             severity,
@@ -627,26 +656,44 @@ impl BaseMetricV2 {
 }
 #[derive(Debug)]
 struct CvssV2 {
-    version: String,
-    vector_string: String,
-    attack_vector: String,
-    attack_complexity: String,
-    confidentiality_impact: String,
-    integrity_impact: String,
-    availability_impact: String,
-    base_score: f64,
+    version: Option<String>,
+    vector_string: Option<String>,
+    attack_vector: Option<String>,
+    attack_complexity: Option<String>,
+    confidentiality_impact: Option<String>,
+    integrity_impact: Option<String>,
+    availability_impact: Option<String>,
+    base_score: Option<f64>,
 }
 
 impl CvssV2 {
     pub fn new(json: &serde_json::Value) -> CvssV2 {
-        let version = json["version"].as_str().unwrap().to_owned();
-        let vector_string = json["vectorString"].as_str().unwrap().to_owned();
-        let attack_vector = json["attackVector"].as_str().unwrap().to_owned();
-        let attack_complexity = json["attackComplexity"].as_str().unwrap().to_owned();
-        let confidentiality_impact = json["confidentialityImpact"].as_str().unwrap().to_owned();
-        let integrity_impact = json["integrityImpact"].as_str().unwrap().to_owned();
-        let availability_impact = json["availabilityImpact"].as_str().unwrap().to_owned();
-        let base_score = json["baseScore"].as_f64().unwrap().to_owned();
+        let version = json["version"].as_str().to_owned().map(|s| s.to_string());
+        let vector_string = json["vectorString"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let attack_vector = json["attackVector"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let attack_complexity = json["attackComplexity"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let confidentiality_impact = json["confidentialityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let integrity_impact = json["integrityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let availability_impact = json["availabilityImpact"]
+            .as_str()
+            .to_owned()
+            .map(|s| s.to_string());
+        let base_score = json["baseScore"].as_f64().to_owned();
         CvssV2 {
             version,
             vector_string,
