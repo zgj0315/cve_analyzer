@@ -219,13 +219,13 @@ pub fn read_nvdcve() -> serde_json::Value {
 }
 
 #[derive(Debug)]
-struct NvdCve {
-    cve_data_type: String,
-    cve_data_format: String,
-    cve_data_version: String,
-    cve_data_number_of_cves: String,
-    cve_data_timestamp: String,
-    cve_items: Vec<CveItem>,
+pub struct NvdCve {
+    pub cve_data_type: String,
+    pub cve_data_format: String,
+    pub cve_data_version: String,
+    pub cve_data_number_of_cves: String,
+    pub cve_data_timestamp: String,
+    pub cve_items: Vec<CveItem>,
 }
 
 impl NvdCve {
@@ -248,12 +248,12 @@ impl NvdCve {
     }
 }
 #[derive(Debug)]
-struct CveItem {
-    cve: Cve,
-    configurations: Configurations,
-    impact: Impact,
-    published_date: String,
-    last_modified_date: String,
+pub struct CveItem {
+    pub cve: Cve,
+    pub configurations: Configurations,
+    pub impact: Impact,
+    pub published_date: String,
+    pub last_modified_date: String,
 }
 
 impl CveItem {
@@ -282,14 +282,14 @@ impl CveItem {
     }
 }
 #[derive(Debug)]
-struct Cve {
-    data_type: String,
-    data_format: String,
-    data_version: String,
-    cve_data_meta: CveDataMeta,
-    problem_type: ProblemType,
-    references: References,
-    description: Description,
+pub struct Cve {
+    pub data_type: String,
+    pub data_format: String,
+    pub data_version: String,
+    pub cve_data_meta: CveDataMeta,
+    pub problem_type: ProblemType,
+    pub references: References,
+    pub description: Description,
 }
 
 impl Cve {
@@ -318,9 +318,9 @@ impl Cve {
 }
 
 #[derive(Debug)]
-struct CveDataMeta {
-    id: String,
-    assigner: String,
+pub struct CveDataMeta {
+    pub id: String,
+    pub assigner: String,
 }
 
 impl CveDataMeta {
@@ -331,8 +331,8 @@ impl CveDataMeta {
     }
 }
 #[derive(Debug)]
-struct ProblemType {
-    problem_type_data: Vec<Vec<DescriptionData>>,
+pub struct ProblemType {
+    pub problem_type_data: Vec<Vec<DescriptionData>>,
 }
 
 impl ProblemType {
@@ -352,9 +352,9 @@ impl ProblemType {
     }
 }
 #[derive(Debug)]
-struct DescriptionData {
-    lang: String,
-    value: String,
+pub struct DescriptionData {
+    pub lang: String,
+    pub value: String,
 }
 
 impl DescriptionData {
@@ -365,8 +365,8 @@ impl DescriptionData {
     }
 }
 #[derive(Debug)]
-struct References {
-    reference_data: Vec<ReferenceData>,
+pub struct References {
+    pub reference_data: Vec<ReferenceData>,
 }
 
 impl References {
@@ -381,11 +381,11 @@ impl References {
 }
 
 #[derive(Debug)]
-struct ReferenceData {
-    url: String,
-    name: String,
-    refsource: String,
-    tags: Vec<String>,
+pub struct ReferenceData {
+    pub url: String,
+    pub name: String,
+    pub refsource: String,
+    pub tags: Vec<String>,
 }
 
 impl ReferenceData {
@@ -407,8 +407,8 @@ impl ReferenceData {
     }
 }
 #[derive(Debug)]
-struct Description {
-    description_data: Vec<DescriptionData>,
+pub struct Description {
+    pub description_data: Vec<DescriptionData>,
 }
 
 impl Description {
@@ -423,9 +423,9 @@ impl Description {
 }
 
 #[derive(Debug)]
-struct Configurations {
-    cve_data_version: String,
-    nodes: Vec<Box<Node>>,
+pub struct Configurations {
+    pub cve_data_version: String,
+    pub nodes: Vec<Box<Node>>,
 }
 
 impl Configurations {
@@ -440,10 +440,10 @@ impl Configurations {
     }
 }
 #[derive(Debug)]
-struct Node {
-    operator: String,
-    children: Vec<Box<Node>>,
-    cpe_match: Vec<CpeMatch>,
+pub struct Node {
+    pub operator: String,
+    pub children: Vec<Box<Node>>,
+    pub cpe_match: Vec<CpeMatch>,
 }
 
 impl Node {
@@ -466,12 +466,12 @@ impl Node {
     }
 }
 #[derive(Debug)]
-struct CpeMatch {
-    vulnerable: bool,
-    cpe23_uri: String,
-    version_start_excluding: Option<String>,
-    version_end_excluding: Option<String>,
-    cpe_name: Vec<String>,
+pub struct CpeMatch {
+    pub vulnerable: bool,
+    pub cpe23_uri: String,
+    pub version_start_excluding: Option<String>,
+    pub version_end_excluding: Option<String>,
+    pub cpe_name: Vec<String>,
 }
 
 impl CpeMatch {
@@ -506,9 +506,9 @@ impl CpeMatch {
     }
 }
 #[derive(Debug)]
-struct Impact {
-    base_metric_v3: BaseMetricV3,
-    base_metric_v2: BaseMetricV2,
+pub struct Impact {
+    pub base_metric_v3: BaseMetricV3,
+    pub base_metric_v2: BaseMetricV2,
 }
 
 impl Impact {
@@ -525,10 +525,10 @@ impl Impact {
 }
 
 #[derive(Debug)]
-struct BaseMetricV3 {
-    cvss_v3: CvssV3,
-    exploitability_score: Option<f64>,
-    impact_score: Option<f64>,
+pub struct BaseMetricV3 {
+    pub cvss_v3: CvssV3,
+    pub exploitability_score: Option<f64>,
+    pub impact_score: Option<f64>,
 }
 impl BaseMetricV3 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
@@ -544,19 +544,19 @@ impl BaseMetricV3 {
     }
 }
 #[derive(Debug)]
-struct CvssV3 {
-    version: Option<String>,
-    vector_string: Option<String>,
-    attack_vector: Option<String>,
-    attack_complexity: Option<String>,
-    privileges_required: Option<String>,
-    user_interaction: Option<String>,
-    scope: Option<String>,
-    confidentiality_impact: Option<String>,
-    integrity_impact: Option<String>,
-    availability_impact: Option<String>,
-    base_score: Option<f64>,
-    base_severity: Option<String>,
+pub struct CvssV3 {
+    pub version: Option<String>,
+    pub vector_string: Option<String>,
+    pub attack_vector: Option<String>,
+    pub attack_complexity: Option<String>,
+    pub privileges_required: Option<String>,
+    pub user_interaction: Option<String>,
+    pub scope: Option<String>,
+    pub confidentiality_impact: Option<String>,
+    pub integrity_impact: Option<String>,
+    pub availability_impact: Option<String>,
+    pub base_score: Option<f64>,
+    pub base_severity: Option<String>,
 }
 
 impl CvssV3 {
@@ -617,16 +617,16 @@ impl CvssV3 {
     }
 }
 #[derive(Debug)]
-struct BaseMetricV2 {
-    cvss_v2: CvssV2,
-    severity: Option<String>,
-    exploitability_score: Option<f64>,
-    impact_score: Option<f64>,
-    ac_insuf_info: Option<bool>,
-    obtain_all_privilege: Option<bool>,
-    obtain_user_privilege: Option<bool>,
-    obtain_other_privilege: Option<bool>,
-    user_interaction_required: Option<bool>,
+pub struct BaseMetricV2 {
+    pub cvss_v2: CvssV2,
+    pub severity: Option<String>,
+    pub exploitability_score: Option<f64>,
+    pub impact_score: Option<f64>,
+    pub ac_insuf_info: Option<bool>,
+    pub obtain_all_privilege: Option<bool>,
+    pub obtain_user_privilege: Option<bool>,
+    pub obtain_other_privilege: Option<bool>,
+    pub user_interaction_required: Option<bool>,
 }
 
 impl BaseMetricV2 {
@@ -655,15 +655,15 @@ impl BaseMetricV2 {
     }
 }
 #[derive(Debug)]
-struct CvssV2 {
-    version: Option<String>,
-    vector_string: Option<String>,
-    attack_vector: Option<String>,
-    attack_complexity: Option<String>,
-    confidentiality_impact: Option<String>,
-    integrity_impact: Option<String>,
-    availability_impact: Option<String>,
-    base_score: Option<f64>,
+pub struct CvssV2 {
+    pub version: Option<String>,
+    pub vector_string: Option<String>,
+    pub attack_vector: Option<String>,
+    pub attack_complexity: Option<String>,
+    pub confidentiality_impact: Option<String>,
+    pub integrity_impact: Option<String>,
+    pub availability_impact: Option<String>,
+    pub base_score: Option<f64>,
 }
 
 impl CvssV2 {
@@ -707,6 +707,14 @@ impl CvssV2 {
     }
 }
 
+pub fn print_cpe23uri(node: &Node) {
+    for cpe_match in &node.cpe_match {
+        println!("{}", cpe_match.cpe23_uri);
+    }
+    for children in &node.children {
+        print_cpe23uri(children);
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -777,7 +785,11 @@ mod tests {
     fn test_nvd_cve() {
         let json = read_nvdcve();
         let nvd_cve = NvdCve::new(&json);
-
-        print!("nvd_cve: {:?}", nvd_cve);
+        println!("cve_itmes len: {}", nvd_cve.cve_items.len());
+        for item in nvd_cve.cve_items.iter() {
+            for node in item.configurations.nodes.iter() {
+                print_cpe23uri(node);
+            }
+        }
     }
 }
