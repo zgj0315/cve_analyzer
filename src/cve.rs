@@ -229,14 +229,14 @@ pub struct NvdCve {
 }
 
 impl NvdCve {
-    pub fn new(json: &serde_json::Value) -> NvdCve {
+    fn from(json: &serde_json::Value) -> NvdCve {
         let cve_data_type = json["CVE_data_type"].as_str().unwrap().to_owned();
         let cve_data_format = json["CVE_data_format"].as_str().unwrap().to_owned();
         let cve_data_version = json["CVE_data_version"].as_str().unwrap().to_owned();
         let cve_data_number_of_cves = json["CVE_data_numberOfCVEs"].as_str().unwrap().to_owned();
         let cve_data_timestamp = json["CVE_data_timestamp"].as_str().unwrap().to_owned();
         let cve_items = &json["CVE_Items"];
-        let cve_items = CveItem::new(&cve_items);
+        let cve_items = CveItem::from(&cve_items);
         NvdCve {
             cve_data_type,
             cve_data_format,
@@ -257,16 +257,16 @@ pub struct CveItem {
 }
 
 impl CveItem {
-    pub fn new(json: &serde_json::Value) -> Vec<CveItem> {
+    fn from(json: &serde_json::Value) -> Vec<CveItem> {
         let json = json.as_array().unwrap();
         let mut cve_items = Vec::new();
         for cve_item in json.iter() {
             let cve = &cve_item["cve"];
-            let cve = Cve::new(cve);
+            let cve = Cve::from(cve);
             let configurations = &cve_item["configurations"];
-            let configurations = Configurations::new(configurations);
+            let configurations = Configurations::from(configurations);
             let impact = &cve_item["impact"];
-            let impact = Impact::new(impact);
+            let impact = Impact::from(impact);
             let published_date = cve_item["publishedDate"].as_str().unwrap().to_owned();
             let last_modified_date = cve_item["lastModifiedDate"].as_str().unwrap().to_owned();
             let cve_item = CveItem {
@@ -293,18 +293,18 @@ pub struct Cve {
 }
 
 impl Cve {
-    pub fn new(json: &serde_json::Value) -> Cve {
+    fn from(json: &serde_json::Value) -> Cve {
         let data_type = json["data_type"].as_str().unwrap().to_owned();
         let data_format = json["data_format"].as_str().unwrap().to_owned();
         let data_version = json["data_version"].as_str().unwrap().to_owned();
         let cve_data_meta = &json["CVE_data_meta"];
-        let cve_data_meta = CveDataMeta::new(cve_data_meta);
+        let cve_data_meta = CveDataMeta::from(cve_data_meta);
         let problem_type = &json["problemtype"];
-        let problem_type = ProblemType::new(problem_type);
+        let problem_type = ProblemType::from(problem_type);
         let references = &json["references"];
-        let references = References::new(references);
+        let references = References::from(references);
         let description = &json["description"];
-        let description = Description::new(description);
+        let description = Description::from(description);
         Cve {
             data_type,
             data_format,
@@ -324,7 +324,7 @@ pub struct CveDataMeta {
 }
 
 impl CveDataMeta {
-    pub fn new(json: &serde_json::Value) -> CveDataMeta {
+    fn from(json: &serde_json::Value) -> CveDataMeta {
         let id = json["ID"].as_str().unwrap().to_owned();
         let assigner = json["ASSIGNER"].as_str().unwrap().to_owned();
         CveDataMeta { id, assigner }
@@ -336,14 +336,14 @@ pub struct ProblemType {
 }
 
 impl ProblemType {
-    pub fn new(json: &serde_json::Value) -> ProblemType {
+    fn from(json: &serde_json::Value) -> ProblemType {
         let json = json["problemtype_data"].as_array().unwrap();
         let mut problem_type_data = Vec::new();
         for description_list in json {
             let description_list = description_list["description"].as_array().unwrap();
             let mut description_vec = Vec::new();
             for description in description_list {
-                let description = DescriptionData::new(description);
+                let description = DescriptionData::from(description);
                 description_vec.push(description);
             }
             problem_type_data.push(description_vec);
@@ -358,7 +358,7 @@ pub struct DescriptionData {
 }
 
 impl DescriptionData {
-    pub fn new(json: &serde_json::Value) -> DescriptionData {
+    fn from(json: &serde_json::Value) -> DescriptionData {
         let lang = json["lang"].as_str().unwrap().to_owned();
         let value = json["value"].as_str().unwrap().to_owned();
         DescriptionData { lang, value }
@@ -370,11 +370,11 @@ pub struct References {
 }
 
 impl References {
-    pub fn new(json: &serde_json::Value) -> References {
+    fn from(json: &serde_json::Value) -> References {
         let json = json["reference_data"].as_array().unwrap();
         let mut reference_data = Vec::new();
         for reference in json {
-            reference_data.push(ReferenceData::new(reference));
+            reference_data.push(ReferenceData::from(reference));
         }
         References { reference_data }
     }
@@ -389,7 +389,7 @@ pub struct ReferenceData {
 }
 
 impl ReferenceData {
-    pub fn new(json: &serde_json::Value) -> ReferenceData {
+    fn from(json: &serde_json::Value) -> ReferenceData {
         let url = json["url"].as_str().unwrap().to_owned();
         let name = json["name"].as_str().unwrap().to_owned();
         let refsource = json["refsource"].as_str().unwrap().to_owned();
@@ -412,11 +412,11 @@ pub struct Description {
 }
 
 impl Description {
-    pub fn new(json: &serde_json::Value) -> Description {
+    fn from(json: &serde_json::Value) -> Description {
         let json = json["description_data"].as_array().unwrap();
         let mut description_data = Vec::new();
         for description in json {
-            description_data.push(DescriptionData::new(description));
+            description_data.push(DescriptionData::from(description));
         }
         Description { description_data }
     }
@@ -429,10 +429,10 @@ pub struct Configurations {
 }
 
 impl Configurations {
-    pub fn new(json: &serde_json::Value) -> Configurations {
+    fn from(json: &serde_json::Value) -> Configurations {
         let cve_data_version = json["CVE_data_version"].as_str().unwrap().to_owned();
         let nodes = &json["nodes"];
-        let nodes = Node::new(nodes);
+        let nodes = Node::from(nodes);
         Configurations {
             cve_data_version,
             nodes,
@@ -447,15 +447,15 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(json: &serde_json::Value) -> Vec<Box<Node>> {
+    fn from(json: &serde_json::Value) -> Vec<Box<Node>> {
         let json = json.as_array().unwrap();
         let mut node_vec = Vec::new();
         for node in json {
             let operator = node["operator"].as_str().unwrap().to_owned();
             let children = &node["children"];
-            let children = Node::new(children);
+            let children = Node::from(children);
             let cpe_match = &node["cpe_match"];
-            let cpe_match = CpeMatch::new(cpe_match);
+            let cpe_match = CpeMatch::from(cpe_match);
             node_vec.push(Box::new(Node {
                 operator,
                 children,
@@ -475,7 +475,7 @@ pub struct CpeMatch {
 }
 
 impl CpeMatch {
-    pub fn new(json: &serde_json::Value) -> Vec<CpeMatch> {
+    fn from(json: &serde_json::Value) -> Vec<CpeMatch> {
         let json = json.as_array().unwrap();
         let mut cpe_match_vec = Vec::new();
         for cpe_match in json {
@@ -512,11 +512,11 @@ pub struct Impact {
 }
 
 impl Impact {
-    pub fn new(json: &serde_json::Value) -> Impact {
+    fn from(json: &serde_json::Value) -> Impact {
         let base_metric_v3 = &json["baseMetricV3"];
-        let base_metric_v3 = BaseMetricV3::new(base_metric_v3);
+        let base_metric_v3 = BaseMetricV3::from(base_metric_v3);
         let base_metric_v2 = &json["baseMetricV2"];
-        let base_metric_v2 = BaseMetricV2::new(base_metric_v2);
+        let base_metric_v2 = BaseMetricV2::from(base_metric_v2);
         Impact {
             base_metric_v3,
             base_metric_v2,
@@ -531,9 +531,9 @@ pub struct BaseMetricV3 {
     pub impact_score: Option<f64>,
 }
 impl BaseMetricV3 {
-    pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
+    fn from(json: &serde_json::Value) -> BaseMetricV3 {
         let cvss_v3 = &json["cvssV3"];
-        let cvss_v3 = CvssV3::new(cvss_v3);
+        let cvss_v3 = CvssV3::from(cvss_v3);
         let exploitability_score = json["exploitabilityScore"].as_f64().to_owned();
         let impact_score = json["impactScore"].as_f64().to_owned();
         BaseMetricV3 {
@@ -560,7 +560,7 @@ pub struct CvssV3 {
 }
 
 impl CvssV3 {
-    pub fn new(json: &serde_json::Value) -> CvssV3 {
+    fn from(json: &serde_json::Value) -> CvssV3 {
         let version = json["version"].as_str().to_owned().map(|s| s.to_string());
         let vector_string = json["vectorString"]
             .as_str()
@@ -630,9 +630,9 @@ pub struct BaseMetricV2 {
 }
 
 impl BaseMetricV2 {
-    pub fn new(json: &serde_json::Value) -> BaseMetricV2 {
+    fn from(json: &serde_json::Value) -> BaseMetricV2 {
         let cvss_v2 = &json["cvssV2"];
-        let cvss_v2 = CvssV2::new(cvss_v2);
+        let cvss_v2 = CvssV2::from(cvss_v2);
         let severity = json["severity"].as_str().to_owned().map(|s| s.to_string());
         let exploitability_score = json["exploitabilityScore"].as_f64().to_owned();
         let impact_score = json["impactScore"].as_f64().to_owned();
@@ -667,7 +667,7 @@ pub struct CvssV2 {
 }
 
 impl CvssV2 {
-    pub fn new(json: &serde_json::Value) -> CvssV2 {
+    fn from(json: &serde_json::Value) -> CvssV2 {
         let version = json["version"].as_str().to_owned().map(|s| s.to_string());
         let vector_string = json["vectorString"]
             .as_str()
@@ -784,7 +784,7 @@ mod tests {
     #[test]
     fn test_nvd_cve() {
         let json = read_nvdcve();
-        let nvd_cve = NvdCve::new(&json);
+        let nvd_cve = NvdCve::from(&json);
         println!("cve_itmes len: {}", nvd_cve.cve_items.len());
         for item in nvd_cve.cve_items.iter() {
             for node in item.configurations.nodes.iter() {
