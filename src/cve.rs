@@ -527,15 +527,15 @@ impl Impact {
 #[derive(Debug)]
 struct BaseMetricV3 {
     cvss_v3: CvssV3,
-    exploitability_score: f64,
-    impact_score: f64,
+    exploitability_score: Option<f64>,
+    impact_score: Option<f64>,
 }
 impl BaseMetricV3 {
     pub fn new(json: &serde_json::Value) -> BaseMetricV3 {
         let cvss_v3 = &json["cvssV3"];
         let cvss_v3 = CvssV3::new(cvss_v3);
-        let exploitability_score = json["exploitabilityScore"].as_f64().unwrap().to_owned();
-        let impact_score = json["impactScore"].as_f64().unwrap().to_owned();
+        let exploitability_score = json["exploitabilityScore"].as_f64().to_owned();
+        let impact_score = json["impactScore"].as_f64().to_owned();
         BaseMetricV3 {
             cvss_v3,
             exploitability_score,
