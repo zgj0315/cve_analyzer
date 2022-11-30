@@ -4,7 +4,7 @@ use self::proto::{
     References,
 };
 
-pub mod proto {
+mod proto {
     include!(concat!(env!("OUT_DIR"), "/nvdcve.rs"));
 }
 
