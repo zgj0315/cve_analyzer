@@ -1,4 +1,5 @@
 mod cve;
+mod lib;
 mod nvd_cve;
 use cve::{cve_match, download_cve, read_nvdcve, Cpe23};
 
