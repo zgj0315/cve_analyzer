@@ -126,8 +126,8 @@ mod tests {
         let zip_file = File::create("./data/cve_proto.cache.zip").unwrap();
         let mut zip_writer = zip::ZipWriter::new(zip_file);
         let options = FileOptions::default()
-            .compression_method(zip::CompressionMethod::Zstd)
-            .unix_permissions(0o755);
+            .compression_method(zip::CompressionMethod::Bzip2)
+            .unix_permissions(0o400);
         zip_writer.start_file("cve_proto.cache", options).unwrap();
         zip_writer.write_all(&buf).unwrap();
         zip_writer.finish().unwrap();
