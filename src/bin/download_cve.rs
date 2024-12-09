@@ -25,7 +25,7 @@ async fn download_from_cve() -> anyhow::Result<()> {
     let yyyy_mm_dd = format!("{}-{:02}-{:02}", now_year, now_month, now_day);
     // https://github.com/CVEProject/cvelistV5/releases/download/cve_2024-12-09_0500Z/2024-12-09_all_CVEs_at_midnight.zip.zip
     let url = format!("https://github.com/CVEProject/cvelistV5/releases/download/cve_{}_{:02}00Z/{}_all_CVEs_at_midnight.zip.zip",
-    yyyy_mm_dd, now_hour,yyyy_mm_dd);
+    yyyy_mm_dd, now_hour, yyyy_mm_dd);
     log::info!("downloading {url}");
     let rsp = reqwest::get(url).await?;
     let rsp_bytes = rsp.bytes().await?;
