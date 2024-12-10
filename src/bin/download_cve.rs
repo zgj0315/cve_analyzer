@@ -1,4 +1,4 @@
-use chrono::{Datelike, Timelike};
+use chrono::{Datelike, Duration, Timelike};
 use cve_analyzer::{CVE_DATA_PATH, NVD_DATA_PATH};
 use sha2::{Digest, Sha256};
 use std::{
@@ -9,21 +9,25 @@ use std::{
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().with_line_number(true).init();
-    download_from_nvd().await?;
-    download_from_cve().await?;
+    let _ = tokio::join!(download_from_nvd(), download_from_cve());
     Ok(())
 }
 
 async fn download_from_cve() -> anyhow::Result<()> {
     let cve_zip = CVE_DATA_PATH.join("cves.zip");
-    let now_year = chrono::Utc::now().year();
-    let now_month = chrono::Utc::now().month();
-    let now_day = chrono::Utc::now().day();
-    let now_hour = chrono::Utc::now().hour();
+    let mut dt = chrono::Utc::now();
+    if dt.hour() == 0 {
+        dt = dt - Duration::hours(1);
+    }
+    let now_year = dt.year();
+    let now_month = dt.month();
+    let now_day = dt.day();
+    let now_hour = dt.hour() - 1;
+
     let yyyy_mm_dd = format!("{}-{:02}-{:02}", now_year, now_month, now_day);
     // https://github.com/CVEProject/cvelistV5/releases/download/cve_2024-12-09_0500Z/2024-12-09_all_CVEs_at_midnight.zip.zip
     let url = format!("https://github.com/CVEProject/cvelistV5/releases/download/cve_{}_{:02}00Z/{}_all_CVEs_at_midnight.zip.zip",
-    yyyy_mm_dd, now_hour, yyyy_mm_dd);
+            yyyy_mm_dd, now_hour, yyyy_mm_dd);
     log::info!("downloading {url}");
     let rsp = reqwest::get(url).await?;
     let rsp_bytes = rsp.bytes().await?;
