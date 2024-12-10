@@ -1,9 +1,9 @@
 use chrono::{Datelike, Timelike};
+use cve_analyzer::{CVE_DATA_PATH, NVD_DATA_PATH};
 use sha2::{Digest, Sha256};
 use std::{
-    fs::{self, File},
+    fs::File,
     io::{BufReader, Read, Write},
-    path::PathBuf,
 };
 
 #[tokio::main]
@@ -15,9 +15,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn download_from_cve() -> anyhow::Result<()> {
-    let cve_data_path = PathBuf::from("./data/cve_raw_data/");
-    fs::create_dir_all(&cve_data_path)?;
-    let cve_zip = cve_data_path.join("cves.zip");
+    let cve_zip = CVE_DATA_PATH.join("cves.zip");
     let now_year = chrono::Utc::now().year();
     let now_month = chrono::Utc::now().month();
     let now_day = chrono::Utc::now().day();
@@ -36,8 +34,6 @@ async fn download_from_cve() -> anyhow::Result<()> {
 }
 
 async fn download_from_nvd() -> anyhow::Result<()> {
-    let raw_data_path = PathBuf::from("./data/nvd_raw_data/");
-    fs::create_dir_all(&raw_data_path)?;
     let start_year = 2002;
     let end_year = chrono::Utc::now().year();
     for year in start_year..=end_year {
@@ -50,7 +46,7 @@ async fn download_from_nvd() -> anyhow::Result<()> {
             let meta = rsp.text().await?;
             if let Some((_, sha256_lastest)) = meta.trim_end().split_once("sha256:") {
                 let file_name_gz = format!("nvdcve-1.1-{}.json.gz", year);
-                let path_gz = raw_data_path.join(&file_name_gz);
+                let path_gz = NVD_DATA_PATH.join(&file_name_gz);
                 if path_gz.exists() {
                     let file_gz = File::open(&path_gz)?;
                     let gz_decoder = flate2::read::GzDecoder::new(file_gz);
