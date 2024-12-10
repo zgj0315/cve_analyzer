@@ -28,4 +28,6 @@ docker compose -f docker-compose-image-tag.yml up
 - [X] 下载nvd
 - [X] 下载cve
 - [ ] 解析nvd，转成struct
-- [ ] 解析cve，转成struct
+- [X] 解析cve，转成struct
+- [X] cve入库ck
+- [ ] nvd入库ck

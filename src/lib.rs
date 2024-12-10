@@ -4,6 +4,17 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use time::OffsetDateTime;
 
+pub static CVE_DATA_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let cve_data_path = PathBuf::from("./data/cve_raw_data/");
+    fs::create_dir_all(&cve_data_path).unwrap_or_default();
+    cve_data_path
+});
+pub static NVD_DATA_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let nvd_data_path = PathBuf::from("./data/nvd_raw_data/");
+    fs::create_dir_all(&nvd_data_path).unwrap_or_default();
+    nvd_data_path
+});
+
 #[derive(clickhouse::Row, Serialize, Debug)]
 pub struct CveRow {
     pub data_type: String,
@@ -44,13 +55,10 @@ pub struct CveRow {
     pub adp_metrics: Vec<String>,
 }
 
-pub static CVE_DATA_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let cve_data_path = PathBuf::from("./data/cve_raw_data/");
-    fs::create_dir_all(&cve_data_path).unwrap_or_default();
-    cve_data_path
-});
-pub static NVD_DATA_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let nvd_data_path = PathBuf::from("./data/nvd_raw_data/");
-    fs::create_dir_all(&nvd_data_path).unwrap_or_default();
-    nvd_data_path
-});
+#[derive(clickhouse::Row, Serialize, Debug)]
+pub struct NvdRow {
+    data_type: String,
+    data_format: String,
+    data_version: String,
+    cve_id: String,
+}
