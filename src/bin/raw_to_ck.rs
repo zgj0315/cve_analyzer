@@ -1,16 +1,14 @@
+use clickhouse::Client;
+use cve_analyzer::{CveRow, CVE_DATA_PATH};
+use serde_json::Value;
 use std::{
     fs::{self, File},
     io::{BufReader, Cursor, Read},
     path::Path,
     thread,
 };
-
-use clickhouse::Client;
-use cve_analyzer::{CveRow, CVE_DATA_PATH};
-use serde_json::Value;
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
 use tokio::sync::mpsc::Sender;
-
 use zip::ZipArchive;
 
 #[tokio::main]
