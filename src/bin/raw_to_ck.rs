@@ -8,6 +8,7 @@ use clickhouse::Client;
 use cve_analyzer::{CveRow, CVE_DATA_PATH};
 use serde_json::Value;
 use time::{format_description::well_known::Iso8601, OffsetDateTime};
+use tokio::sync::mpsc::Sender;
 use walkdir::WalkDir;
 
 #[tokio::main]
@@ -40,8 +41,7 @@ async fn ddl(client: &Client) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
-    let mut insert_cve = client.insert("tbl_cve")?;
+async fn read_cve_json(tx: Sender<CveRow>) -> anyhow::Result<()> {
     for entry in WalkDir::new(CVE_DATA_PATH.as_path()) {
         let entry = entry?;
         if entry
@@ -115,7 +115,7 @@ async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
                 .map(String::from)
                 .unwrap_or_default();
             if state.eq("REJECTED") {
-                log::info!("ignore rejected cve: {}", cve_id);
+                // log::info!("ignore rejected cve: {}", cve_id);
                 continue;
             }
             let assigner_short_name = json["cveMetadata"]["assignerShortName"]
@@ -169,7 +169,31 @@ async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
                 adp_affected: adp_affecteds,
                 adp_metrics: adp_meterics,
             };
-            insert_cve.write(&cve_row).await?;
+            tx.send(cve_row).await?;
+        }
+    }
+    Ok(())
+}
+
+async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100);
+    tokio::spawn(async { read_cve_json(tx).await });
+    let mut insert_cve = client.insert("tbl_cve")?;
+    let mut count = 0;
+    let mut ts_last = chrono::Utc::now().timestamp_millis();
+    while let Some(cve_row) = rx.recv().await {
+        insert_cve.write(&cve_row).await?;
+        count += 1;
+        let ts_now = chrono::Utc::now().timestamp_millis();
+        let ts_delta = ts_now - ts_last;
+        if count % 10 == 0 && ts_delta >= 3_000 {
+            log::info!(
+                "speed {}, channel: {}",
+                (count * 1_000) / ts_delta,
+                rx.capacity()
+            );
+            ts_last = ts_now;
+            count = 0;
         }
     }
     insert_cve.end().await?;
