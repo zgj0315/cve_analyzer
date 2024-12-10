@@ -17,7 +17,7 @@ async fn download_from_cve() -> anyhow::Result<()> {
     let cve_zip = CVE_DATA_PATH.join("cves.zip.zip");
     let mut dt = chrono::Utc::now();
     if dt.hour() == 0 {
-        dt = dt - Duration::hours(1);
+        dt -= Duration::hours(1);
     }
     let now_year = dt.year();
     let now_month = dt.month();
