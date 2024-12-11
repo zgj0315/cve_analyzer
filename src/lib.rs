@@ -57,8 +57,12 @@ pub struct CveRow {
 
 #[derive(clickhouse::Row, Serialize, Debug)]
 pub struct NvdRow {
-    data_type: String,
-    data_format: String,
-    data_version: String,
-    cve_id: String,
+    pub cve_id: String,
+    pub cve: String,
+    pub configurations: String,
+    pub impact: String,
+    #[serde(with = "clickhouse::serde::time::datetime")]
+    pub published_date: OffsetDateTime,
+    #[serde(with = "clickhouse::serde::time::datetime")]
+    pub last_modified_date: OffsetDateTime,
 }

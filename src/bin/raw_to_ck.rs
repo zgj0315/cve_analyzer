@@ -1,5 +1,5 @@
 use clickhouse::Client;
-use cve_analyzer::{CveRow, CVE_DATA_PATH};
+use cve_analyzer::{CveRow, NvdRow, CVE_DATA_PATH, NVD_DATA_PATH};
 use serde_json::Value;
 use std::{
     fs::{self, File},
@@ -20,7 +20,7 @@ async fn main() -> anyhow::Result<()> {
         .with_user("username_cyberkl")
         .with_password("password_cyberkl");
     ddl(&client).await?;
-    cve_json_to_ck(&client).await?;
+    let _ = tokio::join!(cve_json_to_ck(&client), nvd_json_to_ck(&client));
     Ok(())
 }
 
@@ -89,8 +89,7 @@ fn read_cve_json(tx: Sender<CveRow>) -> anyhow::Result<()> {
                     );
                     adp_affecteds
                         .push(v["affected"].as_str().map(String::from).unwrap_or_default());
-                    adp_meterics
-                        .push(v["meterics"].as_str().map(String::from).unwrap_or_default());
+                    adp_meterics.push(v["meterics"].as_str().map(String::from).unwrap_or_default());
                 }
             }
             let data_type = json["dataType"]
@@ -118,10 +117,10 @@ fn read_cve_json(tx: Sender<CveRow>) -> anyhow::Result<()> {
                 .as_str()
                 .map(String::from)
                 .unwrap_or_default();
-            if state.eq("REJECTED") {
-                // log::info!("ignore rejected cve: {}", cve_id);
-                continue;
-            }
+            // if state.eq("REJECTED") {
+            //     // log::info!("ignore rejected cve: {}", cve_id);
+            //     continue;
+            // }
             let assigner_short_name = json["cveMetadata"]["assignerShortName"]
                 .as_str()
                 .map(String::from)
@@ -182,17 +181,17 @@ fn read_cve_json(tx: Sender<CveRow>) -> anyhow::Result<()> {
 async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
     let (tx, mut rx) = tokio::sync::mpsc::channel(100);
     thread::spawn(|| read_cve_json(tx));
-    let mut insert_cve = client.insert("tbl_cve")?;
+    let mut insert = client.insert("tbl_cve")?;
     let mut count = 0;
     let mut ts_last = chrono::Utc::now().timestamp_millis();
-    while let Some(cve_row) = rx.recv().await {
-        insert_cve.write(&cve_row).await?;
+    while let Some(row) = rx.recv().await {
+        insert.write(&row).await?;
         count += 1;
         let ts_now = chrono::Utc::now().timestamp_millis();
         let ts_delta = ts_now - ts_last;
         if count % 10 == 0 && ts_delta >= 3_000 {
             log::info!(
-                "speed {}, channel: {}",
+                "cve speed {}, channel: {}",
                 (count * 1_000) / ts_delta,
                 rx.capacity()
             );
@@ -200,7 +199,7 @@ async fn cve_json_to_ck(client: &Client) -> anyhow::Result<()> {
             count = 0;
         }
     }
-    insert_cve.end().await?;
+    insert.end().await?;
     Ok(())
 }
 
@@ -218,4 +217,87 @@ fn clean_datetime(mut input: String) -> String {
         }
         input
     }
+}
+
+async fn nvd_json_to_ck(client: &Client) -> anyhow::Result<()> {
+    let (tx, mut rx) = tokio::sync::mpsc::channel(100);
+    thread::spawn(|| read_nvd_json(tx));
+    let mut insert = client.insert("tbl_nvd")?;
+    let mut count = 0;
+    let mut ts_last = chrono::Utc::now().timestamp_millis();
+    while let Some(row) = rx.recv().await {
+        insert.write(&row).await?;
+        count += 1;
+        let ts_now = chrono::Utc::now().timestamp_millis();
+        let ts_delta = ts_now - ts_last;
+        if count % 10 == 0 && ts_delta >= 3_000 {
+            log::info!(
+                "nvd speed {}, channel: {}",
+                (count * 1_000) / ts_delta,
+                rx.capacity()
+            );
+            ts_last = ts_now;
+            count = 0;
+        }
+    }
+    insert.end().await?;
+    Ok(())
+}
+
+fn read_nvd_json(tx: Sender<NvdRow>) -> anyhow::Result<()> {
+    for entry in fs::read_dir(NVD_DATA_PATH.as_path())? {
+        let entry = entry?;
+        let path = entry.path();
+        let file_name = entry.file_name().into_string().unwrap_or_default();
+        if path.is_file() && file_name.starts_with("nvdcve-1.1-") && file_name.ends_with(".json.gz")
+        {
+            let file_gz = File::open(&path)?;
+            let gz_decoder = flate2::read::GzDecoder::new(file_gz);
+            let v: Value = serde_json::from_reader(gz_decoder).unwrap();
+            if let Some(cve_items) = v["CVE_Items"].as_array() {
+                for cve_item in cve_items {
+                    let cve_id = cve_item["cve"]["CVE_data_meta"]["ID"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let cve = cve_item["cve"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let configurations = cve_item["configurations"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let impact = cve_item["impact"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let published_date = cve_item["publishedDate"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let published_date =
+                        OffsetDateTime::parse(&clean_datetime(published_date), &Iso8601::DEFAULT)?;
+                    let last_modified_date = cve_item["lastModifiedDate"]
+                        .as_str()
+                        .map(String::from)
+                        .unwrap_or_default();
+                    let last_modified_date = OffsetDateTime::parse(
+                        &clean_datetime(last_modified_date),
+                        &Iso8601::DEFAULT,
+                    )?;
+                    let nvd_row = NvdRow {
+                        cve_id,
+                        cve,
+                        configurations,
+                        impact,
+                        published_date,
+                        last_modified_date,
+                    };
+                    tx.blocking_send(nvd_row)?;
+                }
+            };
+        }
+    }
+    Ok(())
 }
