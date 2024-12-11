@@ -117,10 +117,10 @@ fn read_cve_json(tx: Sender<CveRow>) -> anyhow::Result<()> {
                 .as_str()
                 .map(String::from)
                 .unwrap_or_default();
-            if state.eq("REJECTED") {
-                // log::info!("ignore rejected cve: {}", cve_id);
-                continue;
-            }
+            // if state.eq("REJECTED") {
+            //     // log::info!("ignore rejected cve: {}", cve_id);
+            //     continue;
+            // }
             let assigner_short_name = json["cveMetadata"]["assignerShortName"]
                 .as_str()
                 .map(String::from)
