@@ -3,10 +3,6 @@ edition = "2021"
 name = "cve_analyzer"
 version = "0.1.0"
 
-[[bin]]
-name = "download_cve"
-path = "src/bin/download_cve.rs"
-
 [dependencies]
 anyhow = "1.0"
 chrono = "0.4"

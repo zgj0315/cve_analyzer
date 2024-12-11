@@ -21,7 +21,18 @@ create table if not exists tbl_cve (
         metrics String
     )
 ) engine = MergeTree
--- PARTITION BY
---     toYYYYMM (date_updated)
+order by
+    (cve_id);
+
+DROP TABLE IF EXISTS tbl_nvd;
+
+create table if not exists tbl_nvd (
+    cve_id String,
+    cve String,
+    configurations String,
+    impact String,
+    published_date DateTime ('UTC'),
+    last_modified_date DateTime ('UTC')
+) engine = MergeTree
 order by
     (cve_id);
